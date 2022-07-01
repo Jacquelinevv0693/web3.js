@@ -30,16 +30,16 @@ var scrypt = require('scrypt-js');
 var uuid = require('uuid');
 var utils = require('web3-utils');
 var helpers = require('web3-core-helpers');
-var {TransactionFactory} = require('@ethereumjs/tx');
+var { TransactionFactory } = require('@ethereumjs/tx');
 var Common = require('@ethereumjs/common').default;
 var HardForks = require('@ethereumjs/common').Hardfork;
 var ethereumjsUtil = require('ethereumjs-util');
 
-var isNot = function(value) {
+var isNot = function (value) {
     return (typeof value === 'undefined') || value === null;
 };
 
-var isExist = function(value) {
+var isExist = function (value) {
     return (typeof value !== 'undefined') && value !== null;
 };
 
@@ -75,13 +75,13 @@ var Accounts = function Accounts() {
             name: 'getTransactionCount',
             call: 'eth_getTransactionCount',
             params: 2,
-            inputFormatter: [function(address) {
+            inputFormatter: [function (address) {
                 if (utils.isAddress(address)) {
                     return address;
                 } else {
                     throw new Error('Address ' + address + ' is not a valid address to get the "transactionCount".');
                 }
-            }, function() {
+            }, function () {
                 return 'latest';
             }]
         }),
@@ -89,16 +89,16 @@ var Accounts = function Accounts() {
             name: 'getBlockByNumber',
             call: 'eth_getBlockByNumber',
             params: 2,
-            inputFormatter: [function(blockNumber) {
+            inputFormatter: [function (blockNumber) {
                 return blockNumber ? utils.toHex(blockNumber) : 'latest'
-            }, function() {
+            }, function () {
                 return false
             }]
         }),
     ];
     // attach methods to this._ethereumCall
     this._ethereumCall = {};
-    _ethereumCall.forEach( (method) => {
+    _ethereumCall.forEach((method) => {
         method.attachToObject(_this._ethereumCall);
         method.setRequestManager(_this._requestManager);
     });
@@ -107,7 +107,7 @@ var Accounts = function Accounts() {
     this.wallet = new Wallet(this);
 };
 
-Accounts.prototype._addAccountFunctions = function(account) {
+Accounts.prototype._addAccountFunctions = function (account) {
     var _this = this;
 
     // add sign functions
@@ -149,7 +149,7 @@ Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, ca
         transactionOptions = {},
         hasTxSigningOptions = !!(tx && ((tx.chain && tx.hardfork) || tx.common));
 
-    callback = callback || function() {};
+    callback = callback || function () { };
 
     if (!tx) {
         error = new Error('No transaction object given!');
@@ -188,7 +188,7 @@ Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, ca
         }
 
         try {
-            var transaction = helpers.formatters.inputCallFormatter(Object.assign({},tx));
+            var transaction = helpers.formatters.inputCallFormatter(Object.assign({}, tx));
             transaction.data = transaction.data || '0x';
             transaction.value = transaction.value || '0x';
             transaction.gasLimit = transaction.gasLimit || transaction.gas;
@@ -241,7 +241,7 @@ Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, ca
 
             if (validationErrors.length > 0) {
                 let errorString = 'Signer Error: '
-                for(const validationError of validationErrors) {
+                for (const validationError of validationErrors) {
                     errorString += `${errorString} ${validationError}.`
                 }
                 throw new Error(errorString);
@@ -290,21 +290,21 @@ Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, ca
     // Otherwise, get the missing info from the Ethereum Node
     return Promise.all([
         ((isNot(tx.common) || isNot(tx.common.customChain.chainId)) ? //tx.common.customChain.chainId is not optional inside tx.common if tx.common is provided
-            ( isNot(tx.chainId) ? _this._ethereumCall.getChainId() : tx.chainId)
-            : undefined ),
+            (isNot(tx.chainId) ? _this._ethereumCall.getChainId() : tx.chainId)
+            : undefined),
         isNot(tx.nonce) ? _this._ethereumCall.getTransactionCount(_this.privateKeyToAccount(privateKey).address) : tx.nonce,
         isNot(hasTxSigningOptions) ? _this._ethereumCall.getNetworkId() : 1,
         _handleTxPricing(_this, tx)
-    ]).then(function(args) {
+    ]).then(function (args) {
         const [txchainId, txnonce, txnetworkId, txgasInfo] = args;
 
-        if ( (isNot(txchainId) && isNot(tx.common) && isNot(tx.common.customChain.chainId)) || isNot(txnonce) || isNot(txnetworkId) || isNot(txgasInfo)) {
+        if ((isNot(txchainId) && isNot(tx.common) && isNot(tx.common.customChain.chainId)) || isNot(txnonce) || isNot(txnetworkId) || isNot(txgasInfo)) {
             throw new Error('One of the values "chainId", "networkId", "gasPrice", or "nonce" couldn\'t be fetched: ' + JSON.stringify(args));
         }
 
-    return signed({
+        return signed({
             ...tx,
-            ... ((isNot(tx.common) || isNot(tx.common.customChain.chainId) ) ? {chainId: txchainId}:{}), // if common.customChain.chainId is provided no need to add tx.chainId
+            ... ((isNot(tx.common) || isNot(tx.common.customChain.chainId)) ? { chainId: txchainId } : {}), // if common.customChain.chainId is provided no need to add tx.chainId
             nonce: txnonce,
             networkId: txnetworkId,
             ...txgasInfo // Will either be gasPrice or maxFeePerGas and maxPriorityFeePerGas
@@ -506,7 +506,7 @@ Accounts.prototype.recover = function recover(message, signature, preFixed) {
 };
 
 // Taken from https://github.com/ethereumjs/ethereumjs-wallet
-Accounts.prototype.decrypt = function(v3Keystore, password, nonStrict) {
+Accounts.prototype.decrypt = function (v3Keystore, password, nonStrict) {
     /* jshint maxcomplexity: 10 */
 
     if (!(typeof password === 'string')) {
@@ -551,7 +551,7 @@ Accounts.prototype.decrypt = function(v3Keystore, password, nonStrict) {
     return this.privateKeyToAccount(seed, true);
 };
 
-Accounts.prototype.encrypt = function(privateKey, password, options) {
+Accounts.prototype.encrypt = function (privateKey, password, options) {
     /* jshint maxcomplexity: 20 */
     var account = this.privateKeyToAccount(privateKey, true);
 
@@ -595,7 +595,7 @@ Accounts.prototype.encrypt = function(privateKey, password, options) {
 
     return {
         version: 3,
-        id: uuid.v4({random: options.uuid || cryp.randomBytes(16)}),
+        id: uuid.v4({ random: options.uuid || cryp.randomBytes(16) }),
         address: account.address.toLowerCase().replace('0x', ''),
         crypto: {
             ciphertext: ciphertext.toString('hex'),
@@ -620,7 +620,7 @@ function Wallet(accounts) {
     this.defaultKeyName = 'web3js_wallet';
 }
 
-Wallet.prototype._findSafeIndex = function(pointer) {
+Wallet.prototype._findSafeIndex = function (pointer) {
     pointer = pointer || 0;
     if (this.hasOwnProperty(pointer)) {
         return this._findSafeIndex(pointer + 1);
@@ -629,27 +629,27 @@ Wallet.prototype._findSafeIndex = function(pointer) {
     }
 };
 
-Wallet.prototype._currentIndexes = function() {
+Wallet.prototype._currentIndexes = function () {
     var keys = Object.keys(this);
     var indexes = keys
-        .map(function(key) {
+        .map(function (key) {
             return parseInt(key);
         })
-        .filter(function(n) {
+        .filter(function (n) {
             return (n < 9e20);
         });
 
     return indexes;
 };
 
-Wallet.prototype.create = function(numberOfAccounts, entropy) {
+Wallet.prototype.create = function (numberOfAccounts, entropy) {
     for (var i = 0; i < numberOfAccounts; ++i) {
         this.add(this._accounts.create(entropy).privateKey);
     }
     return this;
 };
 
-Wallet.prototype.add = function(account) {
+Wallet.prototype.add = function (account) {
 
     if (typeof account === 'string') {
         account = this._accounts.privateKeyToAccount(account);
@@ -670,7 +670,7 @@ Wallet.prototype.add = function(account) {
     }
 };
 
-Wallet.prototype.remove = function(addressOrIndex) {
+Wallet.prototype.remove = function (addressOrIndex) {
     var account = this[addressOrIndex];
 
     if (account && account.address) {
@@ -692,22 +692,22 @@ Wallet.prototype.remove = function(addressOrIndex) {
     }
 };
 
-Wallet.prototype.clear = function() {
+Wallet.prototype.clear = function () {
     var _this = this;
     var indexes = this._currentIndexes();
 
-    indexes.forEach(function(index) {
+    indexes.forEach(function (index) {
         _this.remove(index);
     });
 
     return this;
 };
 
-Wallet.prototype.encrypt = function(password, options) {
+Wallet.prototype.encrypt = function (password, options) {
     var _this = this;
     var indexes = this._currentIndexes();
 
-    var accounts = indexes.map(function(index) {
+    var accounts = indexes.map(function (index) {
         return _this[index].encrypt(password, options);
     });
 
@@ -715,10 +715,10 @@ Wallet.prototype.encrypt = function(password, options) {
 };
 
 
-Wallet.prototype.decrypt = function(encryptedWallet, password) {
+Wallet.prototype.decrypt = function (encryptedWallet, password) {
     var _this = this;
 
-    encryptedWallet.forEach(function(keystore) {
+    encryptedWallet.forEach(function (keystore) {
         var account = _this._accounts.decrypt(keystore, password);
 
         if (account) {
@@ -731,13 +731,13 @@ Wallet.prototype.decrypt = function(encryptedWallet, password) {
     return this;
 };
 
-Wallet.prototype.save = function(password, keyName) {
+Wallet.prototype.save = function (password, keyName) {
     localStorage.setItem(keyName || this.defaultKeyName, JSON.stringify(this.encrypt(password)));
 
     return true;
 };
 
-Wallet.prototype.load = function(password, keyName) {
+Wallet.prototype.load = function (password, keyName) {
     var keystore = localStorage.getItem(keyName || this.defaultKeyName);
 
     if (keystore) {
@@ -775,7 +775,7 @@ function storageAvailable(type) {
         return true;
     } catch (e) {
         return e && (
-                // everything except Firefox
+            // everything except Firefox
             e.code === 22 ||
             // Firefox
             e.code === 1014 ||
